@@ -18,6 +18,7 @@ import com.example.pixel_project2.common.repository.PickCountRepository;
 import com.example.pixel_project2.common.repository.PostImageRepository;
 import com.example.pixel_project2.common.repository.PostRepository;
 import com.example.pixel_project2.common.repository.UserRepository;
+import com.example.pixel_project2.common.util.PostDiversityOrdering;
 import com.example.pixel_project2.config.jwt.AuthenticatedUser;
 import com.example.pixel_project2.feed.dto.CommentItemResponse;
 import com.example.pixel_project2.feed.dto.CommentListResponse;
@@ -40,8 +41,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -88,8 +91,7 @@ public class FeedServiceImpl implements FeedService {
         }
 
         // ID 목록으로 상세 일괄 조회 (컬렉션 fetch join은 Pageable 없이 사용해야 in-memory 페이징 회피)
-        List<Post> posts = postRepository.findAllByIdsWithDetails(pageIds);
-        posts.sort(Comparator.comparing(Post::getId).reversed());
+        List<Post> posts = diversifyPosts(postRepository.findAllByIdsWithDetails(pageIds), pageIds);
 
         List<FeedItemResponse> feeds = posts.stream()
                 .map(post -> toFeedItemResponse(post, userId))
@@ -97,6 +99,19 @@ public class FeedServiceImpl implements FeedService {
 
         Long nextCursor = hasNext ? pageIds.get(pageIds.size() - 1) : null;
         return new FeedListResponse(feeds, nextCursor, hasNext);
+    }
+
+    private List<Post> diversifyPosts(List<Post> posts, List<Long> rawOrderIds) {
+        Map<Long, Integer> orderByPostId = new HashMap<>();
+        for (int index = 0; index < rawOrderIds.size(); index++) {
+            orderByPostId.put(rawOrderIds.get(index), index);
+        }
+
+        List<Post> orderedPosts = posts.stream()
+                .sorted(Comparator.comparingInt(post -> orderByPostId.getOrDefault(post.getId(), Integer.MAX_VALUE)))
+                .toList();
+
+        return PostDiversityOrdering.diversify(orderedPosts, post -> post.getUser().getId());
     }
 
     @Override

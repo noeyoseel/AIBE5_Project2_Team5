@@ -2,6 +2,7 @@ export type FeedAuthor = {
   userId?: number;
   name: string;
   role: string;
+  roleType?: "designer" | "client";
   avatar: string;
   profileKey?: string;
 };

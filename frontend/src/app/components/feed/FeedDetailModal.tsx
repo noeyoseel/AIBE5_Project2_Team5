@@ -38,6 +38,7 @@ type FeedDetailModalProps = {
   currentUserAvatar: string;
   currentUserName: string;
   commentInputRef: React.RefObject<HTMLInputElement | null>;
+  canProposeProject?: boolean;
   isNight?: boolean;
   formatFeedDateTime: (value?: string) => string | null;
   isFeedLiked: (item: BaseFeedItem) => boolean;
@@ -81,6 +82,7 @@ export function FeedDetailModal({
   currentUserAvatar,
   currentUserName,
   commentInputRef,
+  canProposeProject = false,
   isNight = false,
   formatFeedDateTime,
   isFeedLiked,
@@ -268,14 +270,16 @@ export function FeedDetailModal({
                     )}
                   </div>
                 </Link>
-                <button
-                  type="button"
-                  onClick={(event) => onProposalClick(selectedFeed, event)}
-                  className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#FFB6A6] bg-[#FF5C3A] px-3.5 font-bold text-white shadow-[0_8px_18px_rgba(255,92,58,0.22)] transition-all hover:-translate-y-0.5 hover:bg-[#E94F2F] hover:shadow-[0_10px_22px_rgba(255,92,58,0.28)] focus:outline-none focus:ring-2 focus:ring-[#FFB6A6] focus:ring-offset-2"
-                >
-                  <Send className="size-3.5" />
-                  <span className="text-xs">프로젝트 제안</span>
-                </button>
+                {canProposeProject && (
+                  <button
+                    type="button"
+                    onClick={(event) => onProposalClick(selectedFeed, event)}
+                    className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#FFB6A6] bg-[#FF5C3A] px-3.5 font-bold text-white shadow-[0_8px_18px_rgba(255,92,58,0.22)] transition-all hover:-translate-y-0.5 hover:bg-[#E94F2F] hover:shadow-[0_10px_22px_rgba(255,92,58,0.28)] focus:outline-none focus:ring-2 focus:ring-[#FFB6A6] focus:ring-offset-2"
+                  >
+                    <Send className="size-3.5" />
+                    <span className="text-xs">프로젝트 제안</span>
+                  </button>
+                )}
               </div>
 
               <h2

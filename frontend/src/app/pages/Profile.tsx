@@ -224,6 +224,7 @@ const mapFeedProjectToFeedCardItem = (
       userId: profile.userId,
       name: profile.nickname,
       role: normalizeDesignerJobLabel(profile.job) || profile.role,
+      roleType: profile.role.toLowerCase() === "designer" ? "designer" : "client",
       avatar: getUserAvatar(profile.profileImage, profile.userId, profile.nickname),
       profileKey,
     },
@@ -1643,6 +1644,11 @@ export default function Profile() {
       toast.error("내 피드에는 제안을 보낼 수 없습니다.");
       return;
     }
+    if (currentUser?.role !== "client" || item.author.roleType !== "designer") {
+      toast.error("클라이언트만 디자이너에게 프로젝트를 제안할 수 있습니다.");
+      return;
+    }
+
     const now = Date.now();
     const proposalMessage = `안녕하세요. "${item.title}" 작업을 보고 프로젝트 제안을 드리고 싶어 연락드립니다. 작업 가능 여부와 일정, 견적 등을 이야기해보고 싶습니다.`;
     try {
@@ -3914,6 +3920,11 @@ export default function Profile() {
           currentUserAvatar={profileFeedUserAvatar}
           currentUserName={profileFeedUserName}
           commentInputRef={profileFeedCommentInputRef}
+          canProposeProject={
+            currentUser?.role === "client" &&
+            selectedProfileFeed.author.roleType === "designer" &&
+            currentUser.userId !== selectedProfileFeed.author.userId
+          }
           formatFeedDateTime={formatProfileFeedDateTime}
           isFeedLiked={(item) => Boolean(item.likedByMe)}
           getLikeCount={(item) => item.likes}

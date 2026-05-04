@@ -14,5 +14,5 @@ public interface ExploreService {
     ExplorePolicyResponse getExplorePolicy();
 
     // 디자이너 목록 조회 (검색, 페이징 포함)
-    List<ExploreDesignerResponseDto> getExploreDesigners(String keyword, int page, int size);
+    List<ExploreDesignerResponseDto> getExploreDesigners(String keyword, int page, int size, String sort);
 }

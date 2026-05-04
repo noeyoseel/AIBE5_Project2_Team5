@@ -47,13 +47,19 @@ export type ExploreDesignerResponseDto = {
   bannerImage: string | null;
 };
 
-export async function getExploreDesignersApi(keyword?: string, page: number = 0, size: number = 20) {
+export async function getExploreDesignersApi(
+  keyword?: string,
+  page: number = 0,
+  size: number = 20,
+  sort: "recommended" | "latest" | "popular" = "recommended",
+) {
   const params = new URLSearchParams();
   if (keyword && keyword.trim() !== "") {
     params.append("keyword", keyword.trim());
   }
   params.append("page", String(page));
   params.append("size", String(size));
+  params.append("sort", sort);
 
   const queryString = params.toString();
   const path = `/api/explore/designers?${queryString}`;

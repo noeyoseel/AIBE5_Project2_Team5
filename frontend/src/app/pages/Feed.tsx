@@ -152,6 +152,12 @@ export default function Feed() {
         userId: feedItem.userId,
         name: feedItem.nickname,
         role: feedItem.job || toFeedAuthorRole(feedItem.role),
+        roleType:
+          feedItem.role === "DESIGNER"
+            ? "designer"
+            : feedItem.role === "CLIENT"
+              ? "client"
+              : undefined,
         avatar: getUserAvatar(feedItem.profileImageUrl, feedItem.userId, feedItem.nickname),
         profileKey: feedItem.profileKey,
       },
@@ -377,6 +383,11 @@ export default function Feed() {
       return;
     }
 
+    if (currentUser?.role !== "client" || item.author.roleType !== "designer") {
+      toast.error("클라이언트만 디자이너에게 프로젝트를 제안할 수 있습니다.");
+      return;
+    }
+
     const now = Date.now();
     const proposalMessage = `안녕하세요. "${item.title}" 작업을 보고 프로젝트 제안을 드리고 싶어 연락드렸습니다. 작업 가능 여부와 일정, 견적을 이야기해보고 싶습니다.`;
 
@@ -557,6 +568,11 @@ export default function Feed() {
           currentUserAvatar={currentUserAvatar}
           currentUserName={currentUserName}
           commentInputRef={commentInputRef}
+          canProposeProject={
+            currentUser?.role === "client" &&
+            selectedFeed.author.roleType === "designer" &&
+            currentUser.userId !== selectedFeed.author.userId
+          }
           isNight={isNight}
           formatFeedDateTime={formatFeedDateTime}
           isFeedLiked={isFeedLiked}

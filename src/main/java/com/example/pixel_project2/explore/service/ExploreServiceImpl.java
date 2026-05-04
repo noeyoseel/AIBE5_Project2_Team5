@@ -7,6 +7,7 @@ import com.example.pixel_project2.common.entity.enums.PostType;
 import com.example.pixel_project2.common.repository.CommentRepository;
 import com.example.pixel_project2.common.repository.PickCountRepository;
 import com.example.pixel_project2.common.repository.PostRepository;
+import com.example.pixel_project2.common.util.PostDiversityOrdering;
 import com.example.pixel_project2.explore.dto.ExploreDesignerResponseDto;
 import com.example.pixel_project2.explore.dto.ExplorePostResponseDto;
 import com.example.pixel_project2.explore.dto.ExplorePolicyResponse;
@@ -17,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +48,10 @@ public class ExploreServiceImpl implements ExploreService {
         }
 
         List<Post> posts = postRepository.findExploreFeeds(PostType.PORTFOLIO, category, keyword, pageable);
+        posts = posts.stream()
+                .sorted(Comparator.comparing(Post::getId).reversed())
+                .toList();
+        posts = PostDiversityOrdering.diversify(posts, post -> post.getUser().getId());
 
         return posts.stream()
                 .map(post -> convertToDto(post, userId))
@@ -56,8 +64,8 @@ public class ExploreServiceImpl implements ExploreService {
     }
 
     @Override
-    public List<ExploreDesignerResponseDto> getExploreDesigners(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public List<ExploreDesignerResponseDto> getExploreDesigners(String keyword, int page, int size, String sort) {
+        Pageable pageable = PageRequest.of(page, size, resolveDesignerSort(sort));
         
         // 1. 디자이너 기본 정보 및 작품 개수 조회 (페이징/검색 적용)
         List<ExploreDesignerResponseDto> designers = explorerRepository.findExploreDesigners(keyword, pageable).getContent();
@@ -69,6 +77,16 @@ public class ExploreServiceImpl implements ExploreService {
         });
 
         return designers;
+    }
+
+    private Sort resolveDesignerSort(String sort) {
+        String normalized = sort == null ? "recommended" : sort.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "latest" -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
+            case "popular", "recommended" ->
+                    Sort.by(Sort.Order.desc("followCount"), Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
+            default -> Sort.by(Sort.Order.desc("followCount"), Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
+        };
     }
 
     private ExplorePostResponseDto convertToDto(Post post, Long userId) {

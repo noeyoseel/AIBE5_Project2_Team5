@@ -79,6 +79,12 @@ export function useFeedDetail<TFeed extends BaseFeedItem, TArrayItem extends Bas
             userId: detail.userId,
             name: detail.nickname,
             role: detail.job || resolveFeedAuthorRole(detail.role, detail.postType),
+            roleType:
+              detail.role === "DESIGNER"
+                ? "designer"
+                : detail.role === "CLIENT"
+                  ? "client"
+                  : undefined,
             profileKey: detail.profileKey || String(detail.userId),
             avatar: getUserAvatar(detail.profileImageUrl, detail.userId, detail.nickname),
           },

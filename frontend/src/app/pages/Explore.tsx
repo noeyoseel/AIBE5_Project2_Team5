@@ -184,6 +184,11 @@ export default function Explore() {
   );
   const currentUserName = currentUser?.nickname || currentUser?.name || "내 프로필";
 
+  const canSendProposalToFeed = (item: FeedCardItem) =>
+    currentUser?.role === "client" &&
+    item.author.roleType === "designer" &&
+    currentUser.userId !== item.author.userId;
+
   function toCommentAuthorRole(role: string) {
     if (role === "CLIENT") return "프로젝트 클라이언트";
     if (role === "DESIGNER") return "디자이너";
@@ -371,6 +376,11 @@ export default function Explore() {
       return;
     }
 
+    if (!canSendProposalToFeed(item)) {
+      toast.error("클라이언트만 디자이너에게 프로젝트를 제안할 수 있습니다.");
+      return;
+    }
+
     const now = Date.now();
     const proposalMessage = `안녕하세요. "${item.title}" 작업을 보고 프로젝트 제안을 드리고 싶어 연락드립니다. 작업 가능 여부와 일정, 견적 등을 이야기해보고 싶습니다.`;
 
@@ -458,6 +468,7 @@ export default function Explore() {
           userId: item.userId,
           name: item.nickname,
           role: item.job || "디자이너",
+          roleType: "designer",
           avatar: getUserAvatar(item.profileImage, item.userId, item.nickname),
           profileKey: String(item.userId),
         },
@@ -507,7 +518,7 @@ export default function Explore() {
       if (isInitial) setIsDesignersLoading(true);
       else setIsFetchingMoreDesigners(true);
 
-      const data = await getExploreDesignersApi(debouncedSearchQuery, pageNum, 20);
+      const data = await getExploreDesignersApi(debouncedSearchQuery, pageNum, 20, sortBy);
       
       // 최신 요청이 아니면 상태 업데이트 무시
       if (requestId !== lastDesignersRequestId.current) return;
@@ -529,7 +540,7 @@ export default function Explore() {
         setIsFetchingMoreDesigners(false);
       }
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, sortBy]);
 
   // 검색/필터 변경 시 초기화 후 첫 페이지 로드
   useEffect(() => {
@@ -1126,6 +1137,7 @@ export default function Explore() {
           currentUserAvatar={currentUserAvatar}
           currentUserName={currentUserName}
           commentInputRef={commentInputRef}
+          canProposeProject={canSendProposalToFeed(selectedExploreFeed)}
           formatFeedDateTime={(value?: string) => {
             if (!value) return null;
             const parsedDate = new Date(value);
